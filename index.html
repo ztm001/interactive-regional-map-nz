@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Total Trees Replanted Per Hectare NZ</title>
+
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+
+	<style>
+
+
+		#map { height: 600px; }
+		
+
+		/*Styles for info top right panel*/
+		.info {
+		    padding: 6px 8px;
+		    font: 14px/16px Arial, Helvetica, sans-serif;
+		    background: white;
+		    background: rgba(255,255,255,0.8);
+		    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+		    border-radius: 5px;
+		}
+		.info h4 {
+		    margin: 0 0 5px;
+		    color: #777;
+		}
+
+		/*Legend styles*/
+		.legend {
+		    line-height: 18px;
+		    color: #555;
+		}
+		.legend i {
+		    width: 18px;
+		    height: 18px;
+		    float: left;
+		    margin-right: 8px;
+		    opacity: 0.7;
+		}
+
+
+
+	</style>
+</head>
+<body>
+
+
+ <div id="map"></div>
+
+
+
+<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="regions.js"></script>
+
+
+<script>
+
+
+	// Adding map of NZ and setting view + zoom + tile		
+	var map = L.map('map').setView([-40.825115, 174.351212], 5);
+
+			L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
+				maxZoom: 18,
+				attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+					'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+					'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+				id: 'examples.map-20v6611k'
+			}).addTo(map);
+
+
+
+
+
+	
+	// Colours for the regions + assigning them to a data value 
+	function getColor(d) {
+    return d > 10000 ? '#042208' :
+           d > 8000  ? '#0f350e' :
+           d > 6000  ? '#21cc28' :
+           d > 4000  ? '#62df6e' :
+           d > 2000   ? '#73da58' :
+           d > 1000   ? '#aadf9f' :
+           d > 500   ? '#b9edab' :
+                      '#edfbea';
+	}
+
+
+	// Applying the colours to the data values per region
+	function style(feature) {
+	    return {
+	        fillColor: getColor(feature.properties.trees),
+	        weight: 2,
+	        opacity: 1,
+	        color: 'white',
+	        dashArray: '3',
+	        fillOpacity: 0.7
+	    };
+	}
+
+	
+
+
+
+	// Creating hover feature: Adding an event listener for a mouseover event
+	function highlightFeature(e) {
+			var layer = e.target;
+
+			layer.setStyle({
+				weight: 5,
+				color: '#666',
+				dashArray: '',
+				fillOpacity: 0.7
+			});
+
+			if (!L.Browser.ie && !L.Browser.opera) {
+				layer.bringToFront();
+			}
+
+			info.update(layer.feature.properties);
+		}
+
+
+		// global variable geojson
+		var geojson;
+
+
+		//creating reset hightlight feature
+		function resetHighlight(e) {
+			geojson.resetStyle(e.target);
+			info.update();
+		}
+
+
+		// creating zoom feature
+		function zoomToFeature(e) {
+		    map.fitBounds(e.target.getBounds());
+		}
+
+
+
+		// Applying features to layer
+		function onEachFeature(feature, layer) {
+		    layer.on({
+		        mouseover: highlightFeature,
+		        mouseout: resetHighlight,
+		        click: zoomToFeature
+		    });
+		}
+
+
+
+
+
+		// This section puts information panel onto the top right. Changes on region hover.
+		var info = L.control();
+
+		info.onAdd = function (map) {
+			this._div = L.DomUtil.create('div', 'info');
+			this.update();
+			return this._div;
+		};
+
+		info.update = function (props) {
+			this._div.innerHTML = '<h4>Total Trees Planted Per Hectare</h4>' +  (props ?
+				'<b>' + props.name + '</b><br />' + props.trees + ' hectares '
+				: 'Hover Over A Region'+ '</b><br />' +'Click To Zoom');
+		};
+
+		info.addTo(map);
+
+
+		// Creating a Legend for the bottom right of the map
+		var legend = L.control({position: 'bottomright'});
+
+		legend.onAdd = function (map) {
+		    var div = L.DomUtil.create('div', 'info legend'),
+		        grades = [0, 500, 1000, 2000, 4000, 6000, 8000, 10000],
+		        labels = [];
+
+		    // loop through our density intervals and generate a label with a colored square for each interval
+		    for (var i = 0; i < grades.length; i++) {
+		        div.innerHTML +=
+		            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+		            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+		    }
+		    return div;
+		};
+
+		legend.addTo(map);
+
+
+
+		// Setting styles map and assigning to geojason
+		geojson = L.geoJson(regions, {style: style, onEachFeature: onEachFeature}).addTo(map);
+
+
+
+
+	
+
+
+
+
+
+
+
+	    
+</script>
+	
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
